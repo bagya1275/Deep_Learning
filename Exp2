@@ -1,0 +1,144 @@
+
+# Experiment 2: Covariance, Eigenvalues and Eigenvectors Analysis
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# 1. Generate hospital patient dataset (200 records)
+
+np.random.seed(42)
+
+data = {
+    "Haemoglobin": np.random.normal(13.5, 1.5, 200),
+    "RBC": np.random.normal(4.8, 0.6, 200),
+    "Glucose": np.random.normal(110, 25, 200),
+    "Cholesterol": np.random.normal(190, 30, 200),
+    "BMI": np.random.normal(25, 4, 200)
+}
+
+df = pd.DataFrame(data)
+
+print("First 5 Patient Records:")
+print(df.head())
+
+print("\nDataset Shape:", df.shape)
+
+
+# 2. Standardise the data
+
+from sklearn.preprocessing import StandardScaler
+
+scaler = StandardScaler()
+standardized_data = scaler.fit_transform(df)
+
+standardized_df = pd.DataFrame(
+    standardized_data,
+    columns=df.columns
+)
+
+print("\nStandardised Data:")
+print(standardized_df.head())
+
+
+# 3. Calculate Covariance Matrix
+
+cov_matrix = np.cov(standardized_data, rowvar=False)
+
+print("\nCovariance Matrix:")
+print(cov_matrix)
+
+plt.figure(figsize=(8, 6))
+sns.heatmap(
+    cov_matrix,
+    annot=True,
+    cmap="coolwarm",
+    xticklabels=df.columns,
+    yticklabels=df.columns
+)
+plt.title("Covariance Matrix Heatmap")
+plt.show()
+
+
+# 4. Calculate Correlation Matrix
+
+corr_matrix = standardized_df.corr()
+
+print("\nCorrelation Matrix:")
+print(corr_matrix)
+
+plt.figure(figsize=(8, 6))
+sns.heatmap(
+    corr_matrix,
+    annot=True,
+    cmap="viridis",
+    xticklabels=df.columns,
+    yticklabels=df.columns
+)
+plt.title("Correlation Matrix Heatmap")
+plt.show()
+
+
+# 5. Calculate Eigenvalues and Eigenvectors
+
+eigenvalues, eigenvectors = np.linalg.eigh(cov_matrix)
+
+# Sort in descending order
+idx = np.argsort(eigenvalues)[::-1]
+
+eigenvalues = eigenvalues[idx]
+eigenvectors = eigenvectors[:, idx]
+
+print("\nEigenvalues:")
+print(eigenvalues)
+
+print("\nEigenvectors:")
+print(eigenvectors)
+
+
+# 6. Calculate Explained Variance
+
+explained_variance = eigenvalues / np.sum(eigenvalues)
+
+print("\nExplained Variance Percentage:")
+for i, value in enumerate(explained_variance):
+    print(f"Principal Component {i+1}: {value*100:.2f}%")
+
+
+# 7. Project data onto the first two principal components
+
+projected_data = np.dot(standardized_data, eigenvectors[:, :2])
+
+plt.figure(figsize=(8, 6))
+plt.scatter(
+    projected_data[:, 0],
+    projected_data[:, 1],
+    alpha=0.6
+)
+
+plt.xlabel("Principal Component 1")
+plt.ylabel("Principal Component 2")
+plt.title("Hospital Patient Data - 2D PCA Projection")
+plt.grid()
+plt.show()
+
+
+# 8. Visualise the top two eigenvectors
+
+plt.figure(figsize=(8, 5))
+
+for i in range(2):
+    plt.arrow(
+        0, 0,
+        eigenvectors[i, 0],
+        eigenvectors[i, 1],
+        head_width=0.03,
+        length_includes_head=True
+    )
+
+plt.xlabel("Eigenvector Component 1")
+plt.ylabel("Eigenvector Component 2")
+plt.title("Top Two Eigenvectors")
+plt.grid()
+plt.show()
